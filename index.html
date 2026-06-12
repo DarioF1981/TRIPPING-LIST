@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"/>
   <meta name="theme-color" content="#1E293B"/>
   <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -12,21 +12,63 @@
   <link rel="manifest" href="manifest.json"/>
   <link rel="apple-touch-icon" href="icon.png"/>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    body { background:#0F172A; font-family:"Segoe UI",system-ui,sans-serif; overscroll-behavior:none; }
-    #root { max-width:480px; margin:0 auto; }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    body{background:#0F172A;font-family:"Segoe UI",system-ui,sans-serif;overscroll-behavior:none;}
+    #root{max-width:480px;margin:0 auto;}
     input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; }
+    input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
+    #loading{display:flex;align-items:center;justify-content:center;height:100vh;
+             flex-direction:column;gap:16px;color:#64748B;font-size:14px;}
+    .spin{width:40px;height:40px;border:3px solid #334155;border-top-color:#3B82F6;
+          border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
   </style>
 </head>
 <body>
-<div id="root"></div>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script type="text/babel" data-presets="react">
-const { useState, useEffect, useRef } = React;
+<div id="root"><div id="loading"><div class="spin"></div><span>Caricamento...</span></div></div>
 
+<!-- Preload React from fastest CDNs with fallback -->
+<script>
+window.__reactLoaded = false;
+window.__reactDomLoaded = false;
+window.__babelLoaded = false;
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"
+  onerror="this.src='https://unpkg.com/react@18/umd/react.production.min.js'"
+  crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"
+  onerror="this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'"
+  crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"
+  onerror="this.src='https://unpkg.com/@babel/standalone/babel.min.js'"
+  crossorigin></script>
+
+<script>
+// Wait for all scripts then run app
+function runApp() {
+  if (typeof React === 'undefined' || typeof ReactDOM === 'undefined' || typeof Babel === 'undefined') {
+    setTimeout(runApp, 100);
+    return;
+  }
+  try {
+    const appSource = document.getElementById('app-source').textContent;
+    const compiled = Babel.transform(appSource, { presets: ['react'] }).code;
+    const fn = new Function('React', 'ReactDOM', compiled + '\nreturn App;');
+    const AppComponent = fn(React, ReactDOM);
+    const container = document.getElementById('root');
+    container.innerHTML = '';
+    ReactDOM.createRoot(container).render(React.createElement(AppComponent));
+  } catch(e) {
+    document.getElementById('root').innerHTML =
+      '<div style="color:#EF4444;padding:20px;font-size:13px;">Errore: ' + e.message + '</div>';
+  }
+}
+window.addEventListener('load', () => setTimeout(runApp, 200));
+</script>
+
+<script id="app-source" type="text/plain">
+const { useState, useEffect, useRef } = React;
 
 // ── Default data ──────────────────────────────────────────────────────────────
 const DEFAULT_DATA = {
@@ -1126,10 +1168,8 @@ export default function App() {
   );
 }
 
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(React.createElement(App));
 </script>
+
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -1138,4 +1178,4 @@ if ("serviceWorker" in navigator) {
 }
 </script>
 </body>
-</html>
+  </html>
