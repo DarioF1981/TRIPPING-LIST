@@ -621,7 +621,7 @@ function GestioneLista({ catMap, catNames, customItems, removedIds, expiry, onSa
 }
 
 // ── Main App ──────────────────────────────────────────────────────────────────
-export default function App() {
+function App() {
   // Saved list snapshot: { customItems, removedIds, catNames }
   const [savedList, setSavedList] = useState(() => {
     try { return JSON.parse(localStorage.getItem(K_SAVED)) || null; } catch { return null; }
