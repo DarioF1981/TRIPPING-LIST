@@ -1,4 +1,4 @@
-const CACHE = "checklist-v2";
+const CACHE = "checklist-v3";
 const FILES = ["/", "/index.html", "/icon.png", "/manifest.json"];
 
 self.addEventListener("install", e => e.waitUntil(
@@ -17,55 +17,62 @@ self.addEventListener("fetch", e => e.respondWith(
   }).catch(() => caches.match("/index.html")))
 ));
 
-// ── Daily reminder logic ──────────────────────────────────────────────────────
+// ── Daily reminder ────────────────────────────────────────────────────────────
 let dailyTimer = null;
+let savedConfig = null;
 
-function msUntilNext9am() {
+function msUntilTime(hhmm) {
+  const [h, m] = hhmm.split(":").map(Number);
   const now = new Date();
   const next = new Date(now);
-  next.setHours(9, 0, 0, 0);
+  next.setHours(h, m, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
   return next - now;
 }
 
-function scheduleDailyNotif(pct, departure) {
-  if (dailyTimer) clearTimeout(dailyTimer);
+function fireDailyNotif() {
+  if (!savedConfig) return;
+  const { pct, departure, notifyTime } = savedConfig;
 
-  const fire = () => {
-    // Check if already departed or 100%
-    const today = new Date().toISOString().split("T")[0];
-    if (departure && today >= departure) return; // trip started, stop
-    if (pct >= 100) return;
+  // Stop if departed or complete
+  const today = new Date().toISOString().split("T")[0];
+  if (departure && today >= departure) { dailyTimer = null; return; }
+  if (pct >= 100) { dailyTimer = null; return; }
 
-    const daysLeft = departure
-      ? Math.ceil((new Date(departure) - new Date()) / 86400000)
-      : null;
+  const daysLeft = departure
+    ? Math.max(0, Math.ceil((new Date(departure) - new Date()) / 86400000))
+    : null;
 
-    const body = daysLeft !== null
-      ? `Hai completato il ${pct}% della checklist. Mancano ${daysLeft} giorn${daysLeft===1?"o":"i"} alla partenza!`
-      : `Hai completato il ${pct}% della checklist. Continua a preparare la valigia!`;
+  const body = daysLeft !== null
+    ? `${pct}% completato · Mancano ${daysLeft} giorn${daysLeft === 1 ? "o" : "i"} alla partenza!`
+    : `${pct}% completato · Continua a preparare la valigia!`;
 
-    self.registration.showNotification("✈️ Lista viaggio in corso", {
-      body,
-      icon: "/icon.png",
-      badge: "/icon.png",
-      tag: "daily-reminder",
-      renotify: true,
-    });
+  self.registration.showNotification("✈️ Lista viaggio in corso", {
+    body,
+    icon: "/icon.png",
+    badge: "/icon.png",
+    tag: "daily-reminder",
+    renotify: true,
+    requireInteraction: false,
+  });
 
-    // Schedule next day
-    dailyTimer = setTimeout(fire, msUntilNext9am());
-  };
-
-  dailyTimer = setTimeout(fire, msUntilNext9am());
+  // Schedule next day at same time
+  dailyTimer = setTimeout(fireDailyNotif, msUntilTime(notifyTime) + 1000);
 }
 
 self.addEventListener("message", e => {
   if (e.data?.type === "SCHEDULE_DAILY") {
-    scheduleDailyNotif(e.data.pct, e.data.departure);
+    savedConfig = {
+      pct: e.data.pct,
+      departure: e.data.departure,
+      notifyTime: e.data.notifyTime || "09:00",
+    };
+    if (dailyTimer) clearTimeout(dailyTimer);
+    dailyTimer = setTimeout(fireDailyNotif, msUntilTime(savedConfig.notifyTime));
   }
   if (e.data?.type === "CANCEL_DAILY") {
     if (dailyTimer) { clearTimeout(dailyTimer); dailyTimer = null; }
+    savedConfig = null;
   }
 });
 
