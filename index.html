@@ -33,19 +33,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"
   onerror="this.src='https://unpkg.com/@babel/standalone/babel.min.js'" crossorigin></script>
 <script>
-function runApp() {
-  if (typeof React==='undefined'||typeof ReactDOM==='undefined'||typeof Babel==='undefined') {
-    setTimeout(runApp,150); return;
+function runApp(){
+  if(typeof React==='undefined'||typeof ReactDOM==='undefined'||typeof Babel==='undefined'){
+    setTimeout(runApp,150);return;
   }
-  try {
-    const src = document.getElementById('app-source').textContent;
-    const compiled = Babel.transform(src,{presets:['react']}).code;
-    const fn = new Function('React','ReactDOM',compiled+'\nreturn App;');
-    const AppComponent = fn(React,ReactDOM);
-    const container = document.getElementById('root');
+  try{
+    const src=document.getElementById('app-source').textContent;
+    const compiled=Babel.transform(src,{presets:['react']}).code;
+    const fn=new Function('React','ReactDOM',compiled+'\nreturn App;');
+    const AppComponent=fn(React,ReactDOM);
+    const container=document.getElementById('root');
     container.innerHTML='';
     ReactDOM.createRoot(container).render(React.createElement(AppComponent));
-  } catch(e) {
+  }catch(e){
     document.getElementById('root').innerHTML=
       '<div style="color:#EF4444;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;">Errore:\n'+e.message+'</div>';
   }
@@ -57,15 +57,15 @@ const { useState, useEffect, useRef } = React;
 
 // ── Default data — 3 empty starter groups ─────────────────────────────────────
 const DEFAULT_DATA = {
-  "🧳 Valigia": [],
-  "💊 Medicine": [],
-  "📱 Apparecchi elettronici": [],
+  "🧳 Valigia":                 [],
+  "💊 Medicine":                [],
+  "📱 Apparecchi elettronici":  [],
 };
 
 const DEFAULT_CAT_COLORS = {
-  "🧳 Valigia":                  "#10B981",
-  "💊 Medicine":                 "#EF4444",
-  "📱 Apparecchi elettronici":   "#3B82F6",
+  "🧳 Valigia":                 "#10B981",
+  "💊 Medicine":                "#EF4444",
+  "📱 Apparecchi elettronici":  "#3B82F6",
 };
 
 const QTY_STATES = {
@@ -228,21 +228,27 @@ function CatNameEditor({ value, onSave, onCancel }) {
 
 // ── Gestione Lista view ───────────────────────────────────────────────────────
 function GestioneLista({ catMap, catNames, customItems, removedIds, expiry, onSave, onClose }) {
-  const [localNames,   setLocalNames]   = useState({ ...catNames });
-  const [localRemoved, setLocalRemoved] = useState([...removedIds]);
-  const [localExpiry,  setLocalExpiry]  = useState({ ...expiry });
-  // localQtys: { itemId: number } — overrides for default quantities
-  const [localQtys,    setLocalQtys]    = useState({});
-  const [editingCat,   setEditingCat]   = useState(null);
-  const [openCats,     setOpenCats]     = useState({});
-  // new group form
-  const [showNewGroup, setShowNewGroup] = useState(false);
-  const [newGroupName, setNewGroupName] = useState("");
+  const [localNames,    setLocalNames]   = useState({ ...catNames });
+  const [localRemoved,  setLocalRemoved] = useState([...removedIds]);
+  const [localExpiry,   setLocalExpiry]  = useState({ ...expiry });
+  const [localQtys,     setLocalQtys]    = useState({});
+  const [deletedGroups, setDeletedGroups]= useState([]); // group keys to delete entirely
+  const [editingCat,    setEditingCat]   = useState(null);
+  const [openCats,      setOpenCats]     = useState({});
+  const [showNewGroup,  setShowNewGroup] = useState(false);
+  const [newGroupName,  setNewGroupName] = useState("");
 
-  const allCategories = Object.keys(catMap);
+  const allCategories = Object.keys(catMap).filter(k => !deletedGroups.includes(k));
 
   const toggleRemove = (id) =>
     setLocalRemoved(p => p.includes(id) ? p.filter(x=>x!==id) : [...p, id]);
+
+  const deleteGroup = (catKey) => {
+    setDeletedGroups(p => [...p, catKey]);
+    // also mark all items in group as removed
+    const items = catMap[catKey] || [];
+    setLocalRemoved(p => [...new Set([...p, ...items.map(i=>i.id)])]);
+  };
 
   const setExpiryVal = (id, val) =>
     setLocalExpiry(p => ({ ...p, [id]: val }));
@@ -254,7 +260,7 @@ function GestioneLista({ catMap, catNames, customItems, removedIds, expiry, onSa
   };
 
   const handleSave = () => {
-    onSave({ catNames: localNames, removedIds: localRemoved, expiry: localExpiry, qtys: localQtys, newGroup: newGroupName.trim() || null });
+    onSave({ catNames: localNames, removedIds: localRemoved, expiry: localExpiry, qtys: localQtys, newGroup: newGroupName.trim()||null, deletedGroups });
   };
 
   return (
@@ -307,6 +313,10 @@ function GestioneLista({ catMap, catNames, customItems, removedIds, expiry, onSa
                       <button onClick={()=>setOpenCats(p=>({...p,[catKey]:!isOpen}))} style={{
                         background:"none", border:"none", color:"#475569", fontSize:11, cursor:"pointer", padding:"8px 4px"
                       }}>{isOpen?"▲":"▼"}</button>
+                      <button onClick={()=>{ if(window.confirm(`Eliminare il gruppo "${displayName}"?`)) deleteGroup(catKey); }} style={{
+                        background:"none", border:"none", color:"#EF4444", fontSize:18,
+                        cursor:"pointer", padding:"8px 6px 8px 2px", lineHeight:1
+                      }} title="Elimina gruppo">—</button>
                     </>
                 }
               </div>
@@ -560,66 +570,65 @@ function App() {
     setNumpadItem(null);
   };
 
-  // Request notification permission
-  const requestNotifPermission = async () => {
-    if (typeof Notification === "undefined") return "denied";
-    const result = await Notification.requestPermission();
-    setNotifPerm(result);
-    return result;
+  // Open device calendar with pre-filled daily reminder event
+  const openCalendarReminder = () => {
+    if (!departure || !notifyTime) return;
+    const [h, m] = notifyTime.split(":").map(Number);
+    const dep = departure.replace(/-/g, "");
+    // Format: YYYYMMDDTHHMMSS
+    const pad = n => String(n).padStart(2,"0");
+    const today = new Date();
+    const startDate = departure.replace(/-/g,"");
+    const dtStart = `${startDate}T${pad(h)}${pad(m)}00`;
+    const dtEnd   = `${startDate}T${pad(h)}${pad(m+15>59?m:m+15)}00`;
+
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "BEGIN:VEVENT",
+      `DTSTART:${dtStart}`,
+      `DTEND:${dtEnd}`,
+      `RRULE:FREQ=DAILY;UNTIL=${dep}T235959Z`,
+      `SUMMARY:✈️ Lista viaggio — ${progress}% completato`,
+      `DESCRIPTION:Hai completato il ${progress}% della checklist. Mancano pochi giorni alla partenza!`,
+      "BEGIN:VALARM",
+      "ACTION:DISPLAY",
+      "TRIGGER:-PT0M",
+      `DESCRIPTION:✈️ Lista viaggio — ${progress}% completato`,
+      "END:VALARM",
+      "END:VEVENT",
+      "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = "reminder-viaggio.ics";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  // Send an immediate notification
-  const sendNotif = (title, body) => {
-    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-    try { new Notification(title, { body, icon: "icon.png", badge: "icon.png" }); } catch {}
-  };
-
-  // Schedule daily reminder via service worker
-  const scheduleDailyReminder = (pct, dep, time) => {
-    if (!navigator.serviceWorker?.controller) return;
-    navigator.serviceWorker.controller.postMessage({
-      type: "SCHEDULE_DAILY",
-      pct,
-      departure: dep || departure,
-      notifyTime: time || notifyTime,
-    });
-  };
-
-  // Cancel daily reminder
-  const cancelDailyReminder = () => {
-    if (!navigator.serviceWorker?.controller) return;
-    navigator.serviceWorker.controller.postMessage({ type: "CANCEL_DAILY" });
-  };
-
-  // Manual save: persist current progress + trigger notification
-  const saveProgress = async () => {
+  // Manual save: persist current progress + calendar reminder
+  const saveProgress = () => {
     try {
       localStorage.setItem(K_PROGRESS, JSON.stringify({ checkedIds, qtyState, excluded }));
       setSaveFlash(true);
       setTimeout(() => setSaveFlash(false), 1500);
     } catch {}
-
-    let perm = notifPerm;
-    if (perm === "default") perm = await requestNotifPermission();
-    if (perm !== "granted") return;
-
-    if (progress === 100) {
-      sendNotif("🎉 Lista completata!", "Tutto pronto per il viaggio. Buon viaggio!");
-      cancelDailyReminder();
-    } else {
-      sendNotif("✈️ Lista viaggio salvata", `Hai completato il ${progress}% della checklist. Continua così!`);
-      if (departure) scheduleDailyReminder(progress, departure, notifyTime);
+    // Open calendar if departure is set
+    if (departure) {
+      setTimeout(openCalendarReminder, 600);
     }
   };
 
-  // Reset: wipe all trip state + cancel reminders
+  // Reset: wipe all trip state
   const doReset = () => {
     setCheckedIds([]);
     setQtyState({});
     setExcluded([]);
     setDeparture("");
     try { localStorage.removeItem(K_PROGRESS); localStorage.removeItem(K_DEPARTURE); } catch {}
-    cancelDailyReminder();
     setShowConfirmReset(false);
   };
 
@@ -632,18 +641,15 @@ function App() {
     setEditingCat(null);
   };
 
-  const handleGestioneSave = ({ catNames: newNames, removedIds: newRemoved, expiry: newExpiry, qtys, newGroup }) => {
-    // Apply qty overrides: update customItems or add override entries
+  const handleGestioneSave = ({ catNames: newNames, removedIds: newRemoved, expiry: newExpiry, qtys, newGroup, deletedGroups: delGroups }) => {
     if (qtys && Object.keys(qtys).length > 0) {
       setCustomItems(prev => {
         const updated = [...prev];
         for (const [id, qty] of Object.entries(qtys)) {
           if (!qty) continue;
           const existing = updated.findIndex(x => x.id === id);
-          if (existing >= 0) {
-            updated[existing] = { ...updated[existing], qty };
-          } else {
-            // find item in DEFAULT_DATA and add as custom override
+          if (existing >= 0) { updated[existing] = { ...updated[existing], qty }; }
+          else {
             for (const items of Object.values(DEFAULT_DATA)) {
               const found = items.find(i => i.id === id);
               if (found) { updated.push({ ...found, qty }); break; }
@@ -653,10 +659,17 @@ function App() {
         return updated;
       });
     }
-    // Create new empty group if requested
     if (newGroup) {
       const placeholderId = newId();
       setCustomItems(prev => [...prev, { id: placeholderId, cat: newGroup, nome: "Nuovo elemento", qty: 1 }]);
+    }
+    // Remove entire deleted groups from customItems
+    if (delGroups && delGroups.length > 0) {
+      setCustomItems(prev => prev.filter(ci => !delGroups.includes(ci.cat)));
+      // Also remove from catNames
+      const filteredNames = { ...newNames };
+      delGroups.forEach(k => delete filteredNames[k]);
+      newNames = filteredNames;
     }
     const snap = { catNames: newNames, removedIds: newRemoved, customItems };
     setSavedList(snap);
@@ -1001,9 +1014,7 @@ function App() {
 </script>
 <script>
 if("serviceWorker"in navigator){
-  window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("sw.js").catch(()=>{});
-  });
+  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
 }
 </script>
 </body>
