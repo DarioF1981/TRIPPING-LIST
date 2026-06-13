@@ -26,46 +26,226 @@
 </head>
 <body>
 <div id="root"><div id="loading"><div class="spin"></div><span>Caricamento...</span></div></div>
-<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"
-  onerror="this.src='https://unpkg.com/react@18/umd/react.production.min.js'" crossorigin></script>
-<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"
-  onerror="this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'" crossorigin></script>
-<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"
-  onerror="this.src='https://unpkg.com/@babel/standalone/babel.min.js'" crossorigin></script>
+
+<!-- Preload React from fastest CDNs with fallback -->
 <script>
-function runApp(){
-  if(typeof React==='undefined'||typeof ReactDOM==='undefined'||typeof Babel==='undefined'){
-    setTimeout(runApp,150);return;
+window.__reactLoaded = false;
+window.__reactDomLoaded = false;
+window.__babelLoaded = false;
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"
+  onerror="this.src='https://unpkg.com/react@18/umd/react.production.min.js'"
+  crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"
+  onerror="this.src='https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'"
+  crossorigin></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"
+  onerror="this.src='https://unpkg.com/@babel/standalone/babel.min.js'"
+  crossorigin></script>
+
+<script>
+// Wait for all scripts then run app
+function runApp() {
+  if (typeof React === 'undefined' || typeof ReactDOM === 'undefined' || typeof Babel === 'undefined') {
+    setTimeout(runApp, 100);
+    return;
   }
-  try{
-    const src=document.getElementById('app-source').textContent;
-    const compiled=Babel.transform(src,{presets:['react']}).code;
-    const fn=new Function('React','ReactDOM',compiled+'\nreturn App;');
-    const AppComponent=fn(React,ReactDOM);
-    const container=document.getElementById('root');
-    container.innerHTML='';
+  try {
+    const appSource = document.getElementById('app-source').textContent;
+    const compiled = Babel.transform(appSource, { presets: ['react'] }).code;
+    const fn = new Function('React', 'ReactDOM', compiled + '\nreturn App;');
+    const AppComponent = fn(React, ReactDOM);
+    const container = document.getElementById('root');
+    container.innerHTML = '';
     ReactDOM.createRoot(container).render(React.createElement(AppComponent));
-  }catch(e){
-    document.getElementById('root').innerHTML=
-      '<div style="color:#EF4444;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap;">Errore:\n'+e.message+'</div>';
+  } catch(e) {
+    document.getElementById('root').innerHTML =
+      '<div style="color:#EF4444;padding:20px;font-size:13px;">Errore: ' + e.message + '</div>';
   }
 }
-window.addEventListener('load',()=>setTimeout(runApp,300));
+window.addEventListener('load', () => setTimeout(runApp, 200));
 </script>
+
 <script id="app-source" type="text/plain">
 const { useState, useEffect, useRef } = React;
 
-// ── Default data — 3 empty starter groups ─────────────────────────────────────
+// ── Default data ──────────────────────────────────────────────────────────────
 const DEFAULT_DATA = {
-  "🧳 Valigia":                 [],
-  "💊 Medicine":                [],
-  "📱 Apparecchi elettronici":  [],
+  "📱 Apparecchi elettronici": [
+    { id: "e1", nome: "Altri caricatori USB", qty: 2 },
+    { id: "e2", nome: "Caricabatterie power bank", qty: 1 },
+    { id: "e3", nome: "Cassa Bluetooth", qty: 1 },
+    { id: "e4", nome: "Cellulare e caricabatterie", qty: 1 },
+    { id: "e5", nome: "Computer, caricatore, Hard disk, chiavette", qty: 1 },
+    { id: "e6", nome: "Cuffie Bluetooth", qty: 1 },
+    { id: "e7", nome: "Cuffie auricolari", qty: 2 },
+    { id: "e8", nome: "Prese e adattatori per l'estero", qty: 1 },
+    { id: "e9", nome: "Playstation", qty: 1 },
+    { id: "e10", nome: "Joystick PlayStation", qty: 2 },
+    { id: "e11", nome: "Cuffie PlayStation", qty: 1 },
+    { id: "e12", nome: "Sostegno telefono da auto", qty: 1 },
+  ],
+  "🧴 Beauty": [
+    { id: "b1", nome: "Colluttorio", qty: 1 },
+    { id: "b2", nome: "Cotton fioc", qty: 1 },
+    { id: "b3", nome: "Crema mani Rilastil", qty: 1 },
+    { id: "b4", nome: "Deodorante", qty: 1 },
+    { id: "b5", nome: "Filo interdentale – Archetti Gum", qty: 1 },
+    { id: "b6", nome: "Forbicine", qty: 1 },
+    { id: "b7", nome: "Gel", qty: 1 },
+    { id: "b8", nome: "Ago e filo riparazioni", qty: 1 },
+    { id: "b9", nome: "Labello", qty: 1 },
+    { id: "b10", nome: "Lamette da barba", qty: 6 },
+    { id: "b11", nome: "Pinzetta", qty: 1 },
+    { id: "b12", nome: "Profumo bottigliette mini", qty: 4 },
+    { id: "b13", nome: "Schiuma da barba", qty: 1 },
+    { id: "b14", nome: "Shampoo", qty: 1 },
+    { id: "b15", nome: "Spazzola mani", qty: 1 },
+    { id: "b16", nome: "Spazzolino + dentifricio + spazzolino extra", qty: 1 },
+    { id: "b17", nome: "Termometro", qty: 1 },
+  ],
+  "💊 Medicine": [
+    { id: "m1", nome: "Buscopan compositum (coliche)", qty: 2 },
+    { id: "m2", nome: "Augmentin", qty: 1 },
+    { id: "m3", nome: "Enterogermina", qty: 1 },
+    { id: "m4", nome: "Fluifort", qty: 10 },
+    { id: "m5", nome: "Dissenten / Imodium", qty: 1 },
+    { id: "m6", nome: "Moment Act", qty: 1 },
+    { id: "m7", nome: "Gocce collirio", qty: 1 },
+    { id: "m8", nome: "Moment Dol", qty: 1 },
+    { id: "m9", nome: "Nurofen 200 (24 cpr)", qty: 1 },
+    { id: "m10", nome: "Nurofen 400 (12 cpr)", qty: 1 },
+    { id: "m11", nome: "Pastiglie mal di gola (Neo Borocillina)", qty: 1 },
+    { id: "m12", nome: "Tantum gola", qty: 1 },
+    { id: "m13", nome: "Brufen", qty: 12 },
+    { id: "m14", nome: "Tachipirina 1000", qty: 1 },
+    { id: "m15", nome: "Iridina / Tobrastill (antibiotico occhi)", qty: 1 },
+    { id: "m16", nome: "Biochetasi", qty: 1 },
+    { id: "m17", nome: "Toradol", qty: 1 },
+  ],
+  "🦺 Breton – Lavoro": [
+    { id: "br1", nome: "Astuccio", qty: 1 },
+    { id: "br2", nome: "Blocco note", qty: 1 },
+    { id: "br3", nome: "Felpa Breton", qty: 3 },
+    { id: "br4", nome: "Giubbino casa/lavoro Asics 100g", qty: 1 },
+    { id: "br5", nome: "Magliette maniche corte Breton", qty: 6 },
+    { id: "br6", nome: "Materiale necessario all'installazione", qty: 1 },
+    { id: "br7", nome: "Pantaloni Lavoro Breton", qty: 3 },
+    { id: "br8", nome: "Polo maniche corte Breton", qty: 3 },
+    { id: "br9", nome: "Cintura Lavoro Carhartt nera", qty: 1 },
+    { id: "br10", nome: "Zainetto spalla", qty: 1 },
+    { id: "br11", nome: "Scarpe Antinfortunistiche", qty: 1 },
+    { id: "br12", nome: "Polo Maniche Lunghe Breton", qty: 1 },
+  ],
+  "📄 Documenti": [
+    { id: "d1", nome: "Contanti, carte di credito e debito", qty: 1 },
+    { id: "d2", nome: "Numero di conferma dei voli", qty: 1 },
+    { id: "d3", nome: "Passaporto, visto e carta d'identità", qty: 1 },
+    { id: "d4", nome: "Patente o patente internazionale", qty: 1 },
+    { id: "d5", nome: "Prenotazione autonoleggio", qty: 1 },
+    { id: "d6", nome: "Prenotazione hotel", qty: 1 },
+  ],
+  "🩲 Intimo": [
+    { id: "i1", nome: "Boxer", qty: 8 },
+    { id: "i2", nome: "Calzini tempo libero", qty: 4 },
+    { id: "i3", nome: "Costume da bagno", qty: 1 },
+    { id: "i4", nome: "Maglietta intimo maniche corte", qty: 12 },
+    { id: "i5", nome: "Maglietta intimo maniche lunghe", qty: 1 },
+    { id: "i6", nome: "Mutande", qty: 10 },
+    { id: "i7", nome: "Calzini spugna lunghi", qty: 7 },
+    { id: "i8", nome: "Calzini spugna corti", qty: 7 },
+  ],
+  "👕 Tempo libero": [
+    { id: "t1", nome: "Cintura tempo libero", qty: 1 },
+    { id: "t2", nome: "Camice", qty: 2 },
+    { id: "t3", nome: "Cappello / Berretto", qty: 1 },
+    { id: "t4", nome: "Ciabatte", qty: 1 },
+    { id: "t5", nome: "Felpe tempo libero", qty: 2 },
+    { id: "t6", nome: "Giacca a vento Canadian", qty: 1 },
+    { id: "t7", nome: "Guanti tempo libero", qty: 1 },
+    { id: "t8", nome: "Jeans", qty: 2 },
+    { id: "t9", nome: "Kit corsa estate (maglietta, scarpe, pantaloncini)", qty: 2 },
+    { id: "t10", nome: "Kit corsa inverno (maglia tecnica, K-way, calzettoni)", qty: 1 },
+    { id: "t11", nome: "Magliette maniche corte", qty: 7 },
+    { id: "t12", nome: "Magliette maniche corte casa/lavoro", qty: 3 },
+    { id: "t13", nome: "Magliette maniche lunghe casa/lavoro", qty: 1 },
+    { id: "t14", nome: "Maglioni tempo libero", qty: 3 },
+    { id: "t15", nome: "Pantaloncini / short", qty: 1 },
+    { id: "t16", nome: "Pantaloni tuta", qty: 2 },
+    { id: "t17", nome: "Pigiama", qty: 1 },
+    { id: "t18", nome: "Polo maniche corte", qty: 3 },
+    { id: "t19", nome: "Polo maniche lunghe", qty: 1 },
+    { id: "t20", nome: "Scarpe da tempo libero", qty: 1 },
+    { id: "t21", nome: "Scarpe da corsa", qty: 1 },
+    { id: "t22", nome: "T-shirt casual", qty: 9 },
+  ],
+  "🧰 Valigetta Mimetica": [
+    { id: "vm1", nome: "Torcia + cavo ricarica", qty: 1 },
+    { id: "vm2", nome: "Cacciaviti BZ a taglio", qty: 3 },
+    { id: "vm3", nome: "Cacciaviti BZ a croce", qty: 2 },
+    { id: "vm4", nome: "Cacciavite a sfera da 3", qty: 1 },
+    { id: "vm5", nome: "Cacciavite a sfera da 4", qty: 1 },
+    { id: "vm6", nome: "Cacciavite torx T10x75", qty: 1 },
+    { id: "vm7", nome: "Metro da 3 metri", qty: 1 },
+    { id: "vm8", nome: "Pinza puntalini preisolati 0,5/4", qty: 1 },
+    { id: "vm9", nome: "Forbice", qty: 1 },
+    { id: "vm10", nome: "Pennarello fino, grosso + matita", qty: 1 },
+    { id: "vm11", nome: "Cacciavite fino a croce PH00X35", qty: 1 },
+    { id: "vm12", nome: "Cacciavite fino a taglio N2X75", qty: 1 },
+    { id: "vm13", nome: "Taglierino Beta", qty: 1 },
+    { id: "vm14", nome: "Chiave a cricchetto 8-10-13", qty: 1 },
+    { id: "vm15", nome: "Chiavi brugola a T 3-4-5", qty: 1 },
+    { id: "vm16", nome: "Set chiavi a brugola", qty: 1 },
+    { id: "vm17", nome: "Chiavi a pappagallo", qty: 2 },
+    { id: "vm18", nome: "Chiave a rullino regolabile piccola", qty: 1 },
+    { id: "vm19", nome: "Manometri pressioni mandrino + tubazioni", qty: 1 },
+    { id: "vm20", nome: "Manometro pressioni 0/2,5 Bar", qty: 1 },
+    { id: "vm21", nome: "Pinza connettori Siemens", qty: 1 },
+    { id: "vm22", nome: "Pinza pressacapocorda Cembre (Rossi/Blu/Gialli)", qty: 1 },
+    { id: "vm23", nome: "Pinza pressacapocorda Cembre 10/16", qty: 1 },
+    { id: "vm24", nome: "Mine ricambio matita", qty: 1 },
+  ],
+  "🗃️ Valigetta Nera": [
+    { id: "vn1", nome: "Calibro", qty: 1 },
+    { id: "vn2", nome: "Comparatore", qty: 1 },
+    { id: "vn3", nome: "Kit inserti con cricchetto", qty: 1 },
+    { id: "vn4", nome: "Nastro yellow/red/blu/nero", qty: 1 },
+    { id: "vn5", nome: "Comparatore Breton (CARRELLO)", qty: 1 },
+    { id: "vn6", nome: "Puntalini misti (CARRELLO)", qty: 1 },
+    { id: "vn7", nome: "Manometro pressione olio 0/6 Bar", qty: 1 },
+    { id: "vn8", nome: "Pulpitast bimillesimale (CARRELLO)", qty: 1 },
+    { id: "vn9", nome: "Spessore quote cambio utensile (CARRELLO)", qty: 1 },
+    { id: "vn10", nome: "Occhiali per lavorazioni laser", qty: 1 },
+    { id: "vn11", nome: "Cartina di rilevamento laser", qty: 1 },
+    { id: "vn12", nome: "Metro laser", qty: 1 },
+    { id: "vn13", nome: "Tester rete", qty: 1 },
+    { id: "vn14", nome: "Lente 10x", qty: 1 },
+    { id: "vn15", nome: "Pinza connettori rete", qty: 1 },
+    { id: "vn16", nome: "Kit pinze pulizia", qty: 1 },
+  ],
+  "🔌 Tester": [
+    { id: "te1", nome: "Tester e cavi", qty: 1 },
+  ],
+  "🛍️ Varie": [
+    { id: "v1", nome: "Buste biancheria sporca", qty: 1 },
+    { id: "v2", nome: "Agenda", qty: 1 },
+    { id: "v3", nome: "Occhiali da sole + occhiali di ricambio", qty: 2 },
+  ],
 };
 
 const DEFAULT_CAT_COLORS = {
-  "🧳 Valigia":                 "#10B981",
-  "💊 Medicine":                "#EF4444",
-  "📱 Apparecchi elettronici":  "#3B82F6",
+  "📱 Apparecchi elettronici": "#3B82F6",
+  "🧴 Beauty": "#EC4899",
+  "💊 Medicine": "#EF4444",
+  "🦺 Breton – Lavoro": "#F59E0B",
+  "📄 Documenti": "#8B5CF6",
+  "🩲 Intimo": "#14B8A6",
+  "👕 Tempo libero": "#10B981",
+  "🧰 Valigetta Mimetica": "#6B7280",
+  "🗃️ Valigetta Nera": "#94A3B8",
+  "🔌 Tester": "#F97316",
+  "🛍️ Varie": "#84CC16",
 };
 
 const QTY_STATES = {
@@ -81,8 +261,7 @@ const K_REMOVED  = "cv_removed_v4";    // permanently deleted item ids
 const K_CATNAMES = "cv_catnames_v4";   // { originalKey: displayName }
 const K_SAVED    = "cv_saved_v4";      // saved list snapshot
 const K_PROGRESS   = "cv_progress_v4";
-const K_DEPARTURE  = "cv_departure_v4";
-const K_NOTIFYTIME = "cv_notifytime_v4"; // "HH:MM" daily reminder time
+const K_DEPARTURE  = "cv_departure_v4";  // "YYYY-MM-DD" departure date
 
 const MEDICINE_CAT_KEY = "💊 Medicine";
 
@@ -228,27 +407,21 @@ function CatNameEditor({ value, onSave, onCancel }) {
 
 // ── Gestione Lista view ───────────────────────────────────────────────────────
 function GestioneLista({ catMap, catNames, customItems, removedIds, expiry, onSave, onClose }) {
-  const [localNames,    setLocalNames]   = useState({ ...catNames });
-  const [localRemoved,  setLocalRemoved] = useState([...removedIds]);
-  const [localExpiry,   setLocalExpiry]  = useState({ ...expiry });
-  const [localQtys,     setLocalQtys]    = useState({});
-  const [deletedGroups, setDeletedGroups]= useState([]); // group keys to delete entirely
-  const [editingCat,    setEditingCat]   = useState(null);
-  const [openCats,      setOpenCats]     = useState({});
-  const [showNewGroup,  setShowNewGroup] = useState(false);
-  const [newGroupName,  setNewGroupName] = useState("");
+  const [localNames,   setLocalNames]   = useState({ ...catNames });
+  const [localRemoved, setLocalRemoved] = useState([...removedIds]);
+  const [localExpiry,  setLocalExpiry]  = useState({ ...expiry });
+  // localQtys: { itemId: number } — overrides for default quantities
+  const [localQtys,    setLocalQtys]    = useState({});
+  const [editingCat,   setEditingCat]   = useState(null);
+  const [openCats,     setOpenCats]     = useState({});
+  // new group form
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
 
-  const allCategories = Object.keys(catMap).filter(k => !deletedGroups.includes(k));
+  const allCategories = Object.keys(catMap);
 
   const toggleRemove = (id) =>
     setLocalRemoved(p => p.includes(id) ? p.filter(x=>x!==id) : [...p, id]);
-
-  const deleteGroup = (catKey) => {
-    setDeletedGroups(p => [...p, catKey]);
-    // also mark all items in group as removed
-    const items = catMap[catKey] || [];
-    setLocalRemoved(p => [...new Set([...p, ...items.map(i=>i.id)])]);
-  };
 
   const setExpiryVal = (id, val) =>
     setLocalExpiry(p => ({ ...p, [id]: val }));
@@ -260,7 +433,7 @@ function GestioneLista({ catMap, catNames, customItems, removedIds, expiry, onSa
   };
 
   const handleSave = () => {
-    onSave({ catNames: localNames, removedIds: localRemoved, expiry: localExpiry, qtys: localQtys, newGroup: newGroupName.trim()||null, deletedGroups });
+    onSave({ catNames: localNames, removedIds: localRemoved, expiry: localExpiry, qtys: localQtys, newGroup: newGroupName.trim() || null });
   };
 
   return (
@@ -313,10 +486,6 @@ function GestioneLista({ catMap, catNames, customItems, removedIds, expiry, onSa
                       <button onClick={()=>setOpenCats(p=>({...p,[catKey]:!isOpen}))} style={{
                         background:"none", border:"none", color:"#475569", fontSize:11, cursor:"pointer", padding:"8px 4px"
                       }}>{isOpen?"▲":"▼"}</button>
-                      <button onClick={()=>{ if(window.confirm(`Eliminare il gruppo "${displayName}"?`)) deleteGroup(catKey); }} style={{
-                        background:"none", border:"none", color:"#EF4444", fontSize:18,
-                        cursor:"pointer", padding:"8px 6px 8px 2px", lineHeight:1
-                      }} title="Elimina gruppo">—</button>
                     </>
                 }
               </div>
@@ -508,9 +677,6 @@ function App() {
   const [departure,   setDeparture]  = useState(() => {
     try { return localStorage.getItem(K_DEPARTURE) || ""; } catch { return ""; }
   });
-  const [notifyTime,  setNotifyTime] = useState(() => {
-    try { return localStorage.getItem(K_NOTIFYTIME) || "09:00"; } catch { return "09:00"; }
-  });
   const [notifPerm,   setNotifPerm]  = useState(() =>
     typeof Notification !== "undefined" ? Notification.permission : "denied"
   );
@@ -529,7 +695,6 @@ function App() {
   useEffect(() => { try { localStorage.setItem(K_CATNAMES,  JSON.stringify(catNames));    } catch {} }, [catNames]);
   useEffect(() => { try { localStorage.setItem(K_EXPIRY,    JSON.stringify(expiry));      } catch {} }, [expiry]);
   useEffect(() => { try { if(departure) localStorage.setItem(K_DEPARTURE, departure); else localStorage.removeItem(K_DEPARTURE); } catch {} }, [departure]);
-  useEffect(() => { try { localStorage.setItem(K_NOTIFYTIME, notifyTime); } catch {} }, [notifyTime]);
   useEffect(() => { try { if(savedList) localStorage.setItem(K_SAVED,     JSON.stringify(savedList)); } catch {} }, [savedList]);
 
   // Build category map
@@ -570,65 +735,65 @@ function App() {
     setNumpadItem(null);
   };
 
-  // Open device calendar with pre-filled daily reminder event
-  const openCalendarReminder = () => {
-    if (!departure || !notifyTime) return;
-    const [h, m] = notifyTime.split(":").map(Number);
-    const dep = departure.replace(/-/g, "");
-    // Format: YYYYMMDDTHHMMSS
-    const pad = n => String(n).padStart(2,"0");
-    const today = new Date();
-    const startDate = departure.replace(/-/g,"");
-    const dtStart = `${startDate}T${pad(h)}${pad(m)}00`;
-    const dtEnd   = `${startDate}T${pad(h)}${pad(m+15>59?m:m+15)}00`;
-
-    const ics = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "BEGIN:VEVENT",
-      `DTSTART:${dtStart}`,
-      `DTEND:${dtEnd}`,
-      `RRULE:FREQ=DAILY;UNTIL=${dep}T235959Z`,
-      `SUMMARY:✈️ Lista viaggio — ${progress}% completato`,
-      `DESCRIPTION:Hai completato il ${progress}% della checklist. Mancano pochi giorni alla partenza!`,
-      "BEGIN:VALARM",
-      "ACTION:DISPLAY",
-      "TRIGGER:-PT0M",
-      `DESCRIPTION:✈️ Lista viaggio — ${progress}% completato`,
-      "END:VALARM",
-      "END:VEVENT",
-      "END:VCALENDAR"
-    ].join("\r\n");
-
-    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = "reminder-viaggio.ics";
-    a.click();
-    URL.revokeObjectURL(url);
+  // Request notification permission
+  const requestNotifPermission = async () => {
+    if (typeof Notification === "undefined") return "denied";
+    const result = await Notification.requestPermission();
+    setNotifPerm(result);
+    return result;
   };
 
-  // Manual save: persist current progress + calendar reminder
-  const saveProgress = () => {
+  // Send an immediate notification
+  const sendNotif = (title, body) => {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    try { new Notification(title, { body, icon: "icon.png", badge: "icon.png" }); } catch {}
+  };
+
+  // Schedule daily reminder via service worker
+  const scheduleDailyReminder = (pct, dep) => {
+    if (!navigator.serviceWorker?.controller) return;
+    navigator.serviceWorker.controller.postMessage({
+      type: "SCHEDULE_DAILY",
+      pct,
+      departure: dep || departure,
+    });
+  };
+
+  // Cancel daily reminder
+  const cancelDailyReminder = () => {
+    if (!navigator.serviceWorker?.controller) return;
+    navigator.serviceWorker.controller.postMessage({ type: "CANCEL_DAILY" });
+  };
+
+  // Manual save: persist current progress + trigger notification
+  const saveProgress = async () => {
     try {
       localStorage.setItem(K_PROGRESS, JSON.stringify({ checkedIds, qtyState, excluded }));
       setSaveFlash(true);
       setTimeout(() => setSaveFlash(false), 1500);
     } catch {}
-    // Open calendar if departure is set
-    if (departure) {
-      setTimeout(openCalendarReminder, 600);
+
+    let perm = notifPerm;
+    if (perm === "default") perm = await requestNotifPermission();
+    if (perm !== "granted") return;
+
+    if (progress === 100) {
+      sendNotif("🎉 Lista completata!", "Tutto pronto per il viaggio. Buon viaggio!");
+      cancelDailyReminder();
+    } else {
+      sendNotif("✈️ Lista viaggio salvata", `Hai completato il ${progress}% della checklist. Continua così!`);
+      if (departure) scheduleDailyReminder(progress, departure);
     }
   };
 
-  // Reset: wipe all trip state
+  // Reset: wipe all trip state + cancel reminders
   const doReset = () => {
     setCheckedIds([]);
     setQtyState({});
     setExcluded([]);
     setDeparture("");
     try { localStorage.removeItem(K_PROGRESS); localStorage.removeItem(K_DEPARTURE); } catch {}
+    cancelDailyReminder();
     setShowConfirmReset(false);
   };
 
@@ -641,15 +806,18 @@ function App() {
     setEditingCat(null);
   };
 
-  const handleGestioneSave = ({ catNames: newNames, removedIds: newRemoved, expiry: newExpiry, qtys, newGroup, deletedGroups: delGroups }) => {
+  const handleGestioneSave = ({ catNames: newNames, removedIds: newRemoved, expiry: newExpiry, qtys, newGroup }) => {
+    // Apply qty overrides: update customItems or add override entries
     if (qtys && Object.keys(qtys).length > 0) {
       setCustomItems(prev => {
         const updated = [...prev];
         for (const [id, qty] of Object.entries(qtys)) {
           if (!qty) continue;
           const existing = updated.findIndex(x => x.id === id);
-          if (existing >= 0) { updated[existing] = { ...updated[existing], qty }; }
-          else {
+          if (existing >= 0) {
+            updated[existing] = { ...updated[existing], qty };
+          } else {
+            // find item in DEFAULT_DATA and add as custom override
             for (const items of Object.values(DEFAULT_DATA)) {
               const found = items.find(i => i.id === id);
               if (found) { updated.push({ ...found, qty }); break; }
@@ -659,17 +827,10 @@ function App() {
         return updated;
       });
     }
+    // Create new empty group if requested
     if (newGroup) {
       const placeholderId = newId();
       setCustomItems(prev => [...prev, { id: placeholderId, cat: newGroup, nome: "Nuovo elemento", qty: 1 }]);
-    }
-    // Remove entire deleted groups from customItems
-    if (delGroups && delGroups.length > 0) {
-      setCustomItems(prev => prev.filter(ci => !delGroups.includes(ci.cat)));
-      // Also remove from catNames
-      const filteredNames = { ...newNames };
-      delGroups.forEach(k => delete filteredNames[k]);
-      newNames = filteredNames;
     }
     const snap = { catNames: newNames, removedIds: newRemoved, customItems };
     setSavedList(snap);
@@ -785,20 +946,16 @@ function App() {
           style={{ width:"100%", background:"#334155", border:"none", borderRadius:8, padding:"9px 14px",
                    color:"#F1F5F9", fontSize:14, boxSizing:"border-box", outline:"none" }}/>
 
-        {/* Departure date + notify time */}
-        <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:10 }}>
-          <span style={{ fontSize:13, color:"#64748B", flexShrink:0 }}>📅</span>
+        {/* Departure date */}
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:10 }}>
+          <span style={{ fontSize:13, color:"#64748B", flexShrink:0 }}>📅 Partenza:</span>
           <input type="date" value={departure} onChange={e=>setDeparture(e.target.value)}
             style={{ flex:1, background:"#334155", border:"none", borderRadius:8,
-                     padding:"7px 10px", color: departure?"#F1F5F9":"#64748B",
-                     fontSize:13, outline:"none", minWidth:0 }}/>
-          <span style={{ fontSize:13, color:"#64748B", flexShrink:0 }}>🔔</span>
-          <input type="time" value={notifyTime} onChange={e=>setNotifyTime(e.target.value)}
-            style={{ width:88, background:"#334155", border:"none", borderRadius:8,
-                     padding:"7px 10px", color:"#F1F5F9", fontSize:13, outline:"none" }}/>
+                     padding:"7px 12px", color: departure?"#F1F5F9":"#64748B",
+                     fontSize:13, outline:"none" }}/>
           {departure && (
             <button onClick={()=>setDeparture("")} style={{ background:"none", border:"none",
-              color:"#475569", fontSize:16, cursor:"pointer", padding:0, lineHeight:1, flexShrink:0 }}>✕</button>
+              color:"#475569", fontSize:16, cursor:"pointer", padding:0, lineHeight:1 }}>✕</button>
           )}
         </div>
       </div>
@@ -1012,9 +1169,12 @@ function App() {
 }
 
 </script>
+
 <script>
-if("serviceWorker"in navigator){
-  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});});
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
 }
 </script>
 </body>
