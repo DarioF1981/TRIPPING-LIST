@@ -1,4 +1,4 @@
-const CACHE = "checklist-v3";
+const CACHE = "checklist-v4";
 const FILES = ["/", "/index.html", "/icon.png", "/manifest.json"];
 
 self.addEventListener("install", e => e.waitUntil(
