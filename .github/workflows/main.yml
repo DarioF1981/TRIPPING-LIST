@@ -31,6 +31,11 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Clean Gradle cache
+        run: |
+          cd android
+          ./gradlew clean
+          rm -rf .gradle
       - name: Build APK
         run: |
           cd android
