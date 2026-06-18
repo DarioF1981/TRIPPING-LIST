@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import "./App.css";
 
 
@@ -1115,7 +1116,8 @@ export default function App() {
   };
 
   // Schedule native daily notification via Capacitor LocalNotifications plugin
-  const openCalendarReminder = async () => {
+  const scheduleLocalNotifications = async () => {
+    
     if (!departure || !notifyTime) return;
     try {
       const { LocalNotifications } = window.Capacitor?.Plugins || {};
@@ -1440,7 +1442,7 @@ export default function App() {
             style={{ flex:1, background:"#334155", border:"none", borderRadius:8,
                      padding:"7px 10px", color: departure?"#F1F5F9":"#64748B",
                      fontSize:13, outline:"none", minWidth:0 }}/>
-          <button onClick={openCalendarReminder} disabled={!departure} style={{
+          <button onClick={scheduleLocalNotifications} disabled={!departure} style={{
             background: notifFeedback==="ok" ? "rgba(16,185,129,.2)" : "none",
             border:"none", borderRadius:6, flexShrink:0, fontSize:13,
             cursor: departure?"pointer":"default", opacity: departure?1:0.4, padding:"2px 4px"
