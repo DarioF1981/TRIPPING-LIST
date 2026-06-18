@@ -1,0 +1,10 @@
+body {
+  background: #0F172A;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  overscroll-behavior: none;
+}
+
+#root {
+  max-width: 480px;
+  margin: 0 auto;
+}
