@@ -1,4 +1,4 @@
-package com.dariof1981.trippinglist;
+package com.dariof1981.readygo;
 
 import com.getcapacitor.BridgeActivity;
 
