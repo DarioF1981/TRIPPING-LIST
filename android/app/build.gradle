@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.dariof1981.trippinglist"
+    namespace = "com.dariof1981.readygo"
     compileSdk = rootProject.ext.compileSdkVersion
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
     defaultConfig {
-        applicationId "com.dariof1981.trippinglist"
+        applicationId "com.dariof1981.readygo"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
